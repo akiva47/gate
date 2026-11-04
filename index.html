@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="השער">
+<meta name="theme-color" content="#0E1420">
+<meta name="robots" content="noindex, nofollow">
+<title>השער</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;800&family=Secular+One&display=swap">
+<style>
+/* One screen, night-time parking entrance. The gate is the button's subject:
+   it slides open on success, shudders on failure. */
+:root {
+  --night:  #0E1420;
+  --night-2:#151D2E;
+  --asphalt:#1B2232;
+  --wall:   #2A3348;
+  --steel:  #9AA7BD;
+  --steel-d:#5E6A80;
+  --lamp:   #FFC861;
+  --ink:    #EEF2F8;
+  --ink-2:  #9AA6BA;
+  --go:     #3BD68A;
+  --stop:   #FF6A5C;
+  --f-display: "Secular One", "Assistant", system-ui, sans-serif;
+  --f-body: "Assistant", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--night); color: var(--ink); font-family: var(--f-body);
+  -webkit-tap-highlight-color: transparent; overflow-x: hidden;
+}
+.app {
+  min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 18px;
+  padding: calc(18px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(26px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: radial-gradient(70% 45% at 50% 30%, rgba(255, 200, 97, .10), transparent 70%), linear-gradient(180deg, var(--night) 0%, var(--night-2) 100%);
+}
+header { width: 100%; max-width: 460px; display: flex; justify-content: space-between; align-items: center; }
+h1 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 26px; letter-spacing: .01em; }
+.gear { width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(255,255,255,.14); background: transparent; color: var(--ink-2); display: grid; place-items: center; cursor: pointer; }
+.gear:focus-visible, .btn:focus-visible, input:focus-visible { outline: 2px solid var(--lamp); outline-offset: 3px; }
+.gear svg { width: 20px; height: 20px; }
+
+/* the drawing */
+.scene { width: 100%; max-width: 460px; }
+.scene svg { width: 100%; height: auto; display: block; overflow: visible; }
+#gateLeaf { transition: transform 1.6s var(--ease); }
+.open #gateLeaf { transform: translateX(-176px); }
+.fail #gateLeaf { animation: shudder .5s ease-in-out 2; }
+@keyframes shudder { 25% { transform: translateX(-6px); } 75% { transform: translateX(4px); } }
+#beacon { transition: fill .3s; }
+.busy #beacon { animation: blink .7s steps(2) infinite; }
+.open #beacon { fill: var(--go); }
+.fail #beacon { fill: var(--stop); }
+@keyframes blink { 50% { fill: #3a2a12; } }
+#car { transform-origin: 180px 292px; transform-box: view-box; }
+.open #car { animation: drive-in 2.6s cubic-bezier(.55, 0, .35, 1) .9s forwards; }
+@keyframes drive-in {
+  0%   { transform: none; opacity: 1; }
+  75%  { transform: translateY(-82px) scale(.5); opacity: 1; }
+  100% { transform: translateY(-92px) scale(.42); opacity: 0; }
+}
+#headlights { opacity: .3; transition: opacity .6s; }
+.open #headlights { opacity: .85; }
+.tail { opacity: 0; }
+.busy .tail, .open .tail { opacity: .9; }
+.lampglow { animation: flicker 6s infinite; }
+@keyframes flicker { 0%, 92%, 100% { opacity: .55; } 93% { opacity: .3; } 95% { opacity: .6; } }
+
+/* status line */
+.status { min-height: 76px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; max-width: 460px; }
+.status b { font-family: var(--f-display); font-weight: 400; font-size: 28px; line-height: 1.15; }
+.status span { color: var(--ink-2); font-size: 15px; }
+.status.ok b { color: var(--go); }
+.status.bad b { color: var(--stop); }
+.status.pop { animation: pop .6s var(--ease); }
+@keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
+
+/* the button */
+.btn {
+  position: relative; width: min(100%, 460px); height: 84px; border-radius: 22px; border: 0; cursor: pointer;
+  font-family: var(--f-display); font-size: 30px; color: #1A1306;
+  background: linear-gradient(180deg, #FFD27E, var(--lamp)); box-shadow: 0 14px 40px -14px rgba(255, 200, 97, .7), inset 0 -4px 0 rgba(0,0,0,.18);
+  transition: transform .15s, box-shadow .2s, filter .2s; display: flex; align-items: center; justify-content: center; gap: 12px;
+}
+.btn:active { transform: translateY(2px) scale(.99); box-shadow: 0 6px 20px -10px rgba(255, 200, 97, .7), inset 0 -2px 0 rgba(0,0,0,.18); }
+.btn[disabled] { filter: saturate(.6) brightness(.85); cursor: default; }
+.btn svg { width: 30px; height: 30px; }
+.spin { width: 24px; height: 24px; border-radius: 50%; border: 3px solid rgba(26,19,6,.25); border-top-color: #1A1306; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* setup sheet */
+.sheet { position: fixed; inset: 0; z-index: 10; background: rgba(5, 8, 14, .78); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: grid; place-items: end center; }
+.sheet[hidden] { display: none; }
+.sheet form {
+  width: min(100%, 520px); background: var(--night-2); border: 1px solid rgba(255,255,255,.1); border-radius: 24px 24px 0 0;
+  padding: 22px max(18px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));
+  display: flex; flex-direction: column; gap: 12px; animation: up .5s var(--ease);
+}
+@keyframes up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.sheet h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 24px; }
+.sheet p { margin: 0; color: var(--ink-2); font-size: 15px; line-height: 1.5; }
+.sheet label { font-size: 14px; color: var(--ink-2); }
+.sheet textarea { width: 100%; min-height: 96px; resize: vertical; direction: ltr; text-align: left; font: 14px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); background: var(--asphalt); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 12px; }
+.sheet .row { display: flex; gap: 10px; }
+.sheet .row button { flex: 1; height: 52px; border-radius: 14px; font: 700 17px var(--f-body); cursor: pointer; }
+.save { border: 0; background: var(--lamp); color: #1A1306; }
+.cancel { background: transparent; color: var(--ink); border: 1px solid rgba(255,255,255,.18); }
+.err { color: var(--stop); font-size: 14px; min-height: 1em; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}
+</style>
+</head>
+<body>
+<main class="app" id="app">
+  <header>
+    <h1>השער</h1>
+    <button class="gear" id="gear" type="button" aria-label="הגדרות">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+
+  <div class="scene" aria-hidden="true">
+    <svg viewBox="0 0 360 300" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0E1420"/><stop offset="1" stop-color="#1A2336"/></linearGradient>
+        <linearGradient id="road" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#232B3D"/><stop offset="1" stop-color="#151B28"/></linearGradient>
+        <radialGradient id="glow" cx="0.5" cy="0" r="0.9"><stop offset="0" stop-color="#FFC861" stop-opacity=".55"/><stop offset="1" stop-color="#FFC861" stop-opacity="0"/></radialGradient>
+        <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6F7B92"/><stop offset=".45" stop-color="#C9D2E0"/><stop offset="1" stop-color="#5E6A80"/></linearGradient>
+        <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF4D6" stop-opacity=".55"/><stop offset="1" stop-color="#FFF4D6" stop-opacity="0"/></linearGradient>
+        <clipPath id="opening"><rect x="70" y="60" width="220" height="150"/></clipPath>
+      </defs>
+      <rect width="360" height="300" fill="url(#sky)"/>
+      <!-- building behind: the parking level -->
+      <rect x="40" y="40" width="280" height="172" rx="4" fill="#202941"/>
+      <rect x="70" y="60" width="220" height="150" fill="#0B0F18"/>
+      <g fill="#2B3550">
+        <rect x="82" y="150" width="56" height="4" rx="2"/><rect x="152" y="150" width="56" height="4" rx="2"/><rect x="222" y="150" width="56" height="4" rx="2"/>
+      </g>
+      <!-- sign above the opening -->
+      <rect x="130" y="44" width="100" height="14" rx="3" fill="#0E1420"/>
+      <text x="180" y="54.5" font-size="9" text-anchor="middle" fill="#FFC861" font-family="Assistant, sans-serif" font-weight="800">חניה · P</text>
+      <!-- lamp on the wall -->
+      <rect x="22" y="58" width="6" height="40" rx="3" fill="#3A4560"/>
+      <path d="M14 58h22l-4 8H18z" fill="#4A5675"/>
+      <ellipse class="lampglow" cx="25" cy="70" rx="70" ry="90" fill="url(#glow)"/>
+      <!-- the sliding gate -->
+      <g clip-path="url(#opening)">
+        <g id="gateLeaf">
+          <rect x="70" y="70" width="220" height="8" fill="url(#bar)"/>
+          <rect x="70" y="198" width="220" height="8" fill="url(#bar)"/>
+          <g fill="url(#bar)">
+            <rect x="76" y="70" width="6" height="136"/><rect x="96" y="70" width="6" height="136"/><rect x="116" y="70" width="6" height="136"/>
+            <rect x="136" y="70" width="6" height="136"/><rect x="156" y="70" width="6" height="136"/><rect x="176" y="70" width="6" height="136"/>
+            <rect x="196" y="70" width="6" height="136"/><rect x="216" y="70" width="6" height="136"/><rect x="236" y="70" width="6" height="136"/>
+            <rect x="256" y="70" width="6" height="136"/><rect x="276" y="70" width="6" height="136"/>
+          </g>
+          <path d="M70 136h220" stroke="#C9D2E0" stroke-width="5"/>
+        </g>
+      </g>
+      <!-- posts and the motor box with its warning light -->
+      <rect x="60" y="54" width="12" height="160" rx="2" fill="#3A4560"/>
+      <rect x="288" y="54" width="12" height="160" rx="2" fill="#3A4560"/>
+      <rect x="296" y="168" width="34" height="44" rx="5" fill="#2F3954"/>
+      <rect x="303" y="178" width="20" height="5" rx="2" fill="#1B2232"/>
+      <circle id="beacon" cx="313" cy="160" r="7" fill="#C98A1C"/>
+      <rect x="306" y="164" width="14" height="6" rx="2" fill="#2F3954"/>
+      <!-- the road in front -->
+      <path d="M0 212h360v88H0z" fill="url(#road)"/>
+      <path d="M70 212L20 300M290 212l50 88" stroke="#FFC861" stroke-width="3" stroke-dasharray="10 9" opacity=".55"/>
+      <path d="M180 222v14M180 250v18M180 282v18" stroke="#EEF2F8" stroke-width="4" opacity=".35"/>
+      <!-- our car, seen from behind, facing the gate -->
+      <g id="car">
+        <ellipse cx="180" cy="291" rx="66" ry="7" fill="#05070C" opacity=".55"/>
+        <rect x="118" y="268" width="20" height="24" rx="5" fill="#0B0F18"/>
+        <rect x="222" y="268" width="20" height="24" rx="5" fill="#0B0F18"/>
+        <path d="M134 236 L148 210 Q152 204 160 204 H200 Q208 204 212 210 L226 236 Z" fill="#2F5CC0"/>
+        <path d="M146 233 L156 213 Q158 210 162 210 H198 Q202 210 204 213 L214 233 Z" fill="#0E1726"/>
+        <path d="M150 230 L158 215 H202 L210 230 Z" fill="#4E7FE8" opacity=".25"/>
+        <rect x="114" y="234" width="132" height="44" rx="12" fill="#3B6FD9"/>
+        <rect x="114" y="252" width="132" height="4" fill="#2F5CC0"/>
+        <rect x="120" y="242" width="26" height="9" rx="3" fill="#FF4D4D"/>
+        <rect x="214" y="242" width="26" height="9" rx="3" fill="#FF4D4D"/>
+        <rect x="120" y="242" width="26" height="9" rx="3" fill="#FF8A8A" class="tail"/>
+        <rect x="214" y="242" width="26" height="9" rx="3" fill="#FF8A8A" class="tail"/>
+        <rect x="160" y="259" width="40" height="11" rx="2" fill="#F5C518"/>
+        <text x="180" y="267.5" font-size="7.5" text-anchor="middle" fill="#0E1420" font-family="Assistant, sans-serif" font-weight="800">12-345-67</text>
+        <rect x="108" y="236" width="8" height="6" rx="2" fill="#2F5CC0"/>
+        <rect x="244" y="236" width="8" height="6" rx="2" fill="#2F5CC0"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="status" id="status" aria-live="polite">
+    <b id="statusTitle">החניה סגורה</b>
+    <span id="statusText">לחץ על הכפתור כדי לפתוח את השער</span>
+  </div>
+
+  <button class="btn" id="openBtn" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.8-1.2"/></svg>
+    <span id="btnLabel">פתח את השער</span>
+  </button>
+</main>
+
+<!-- First run and the gear: the gate link lives only on this phone -->
+<div class="sheet" id="sheet" hidden>
+  <form id="setup" novalidate>
+    <h2>הקישור של השער</h2>
+    <p>הדבק את הקישור שפותח את השער. הוא נשמר רק בטלפון הזה ולא נשלח לשום מקום אחר, כי מי שמחזיק אותו יכול לפתוח את השער.</p>
+    <label for="urlInput">קישור</label>
+    <textarea id="urlInput" spellcheck="false" autocomplete="off" placeholder="https://www.call2all.co.il/ym/api/RunTzintuk?token=..."></textarea>
+    <div class="err" id="urlErr"></div>
+    <div class="row">
+      <button class="save" type="submit">שמור</button>
+      <button class="cancel" type="button" id="cancelSetup">ביטול</button>
+    </div>
+  </form>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const KEY = "gate.url";
+  const $ = (id) => document.getElementById(id);
+  const app = $("app");
+  let busy = false;
+  let resetTimer = null;
+
+  function getUrl() { try { return localStorage.getItem(KEY) || ""; } catch (e) { return ""; } }
+  function setUrl(v) { try { localStorage.setItem(KEY, v); return true; } catch (e) { return false; } }
+
+  function status(kind, title, text) {
+    const s = $("status");
+    s.className = "status" + (kind ? " " + kind : "");
+    $("statusTitle").textContent = title;
+    $("statusText").textContent = text;
+    void s.offsetWidth;
+    s.classList.add("pop");
+  }
+
+  // The gate API answers with JSON whose responseStatus is "OK", or with the
+  // plain text OK. Anything else, or no readable answer, is a failure.
+  function isOk(text) {
+    const raw = String(text || "").trim();
+    if (/^"?ok"?$/i.test(raw)) return true;
+    try {
+      const j = JSON.parse(raw);
+      const v = j && (j.responseStatus ?? j.status ?? j.result);
+      return typeof v === "string" && v.trim().toUpperCase() === "OK";
+    } catch (e) { return false; }
+  }
+
+  async function openGate() {
+    if (busy) return;
+    const url = getUrl();
+    if (!url) { showSetup(); return; }
+    busy = true;
+    clearTimeout(resetTimer);
+    app.classList.remove("open", "fail");
+    app.classList.add("busy");
+    $("openBtn").disabled = true;
+    $("btnLabel").textContent = "פותח…";
+    $("openBtn").querySelector("svg").outerHTML = '<span class="spin" aria-hidden="true"></span>';
+    status("", "שולח בקשה לשער…", "רגע אחד");
+
+    let ok = false;
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 30000);
+      const res = await fetch(url, { method: "GET", cache: "no-store", signal: ctrl.signal });
+      const body = await res.text();
+      clearTimeout(t);
+      ok = res.ok && isOk(body);
+    } catch (e) {
+      ok = false;       // network error, timeout, or the answer could not be read
+    }
+
+    app.classList.remove("busy");
+    if (ok) {
+      app.classList.add("open");
+      status("ok", "השער נפתח בהצלחה", "אפשר להיכנס");
+      if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
+    } else {
+      app.classList.add("fail");
+      status("bad", "נראה שמשהו השתבש הפעם", "בדוק את החיבור לאינטרנט ונסה שוב");
+      if (navigator.vibrate) navigator.vibrate(200);
+    }
+    const btn = $("openBtn");
+    btn.querySelector(".spin").outerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.8-1.2"/></svg>';
+    $("btnLabel").textContent = ok ? "פתח שוב" : "נסה שוב";
+    btn.disabled = false;
+    busy = false;
+    // The real gate closes on its own; so does the drawing, after a while.
+    resetTimer = setTimeout(() => {
+      app.classList.remove("open", "fail");
+      status("", "החניה סגורה", "לחץ על הכפתור כדי לפתוח את השער");
+      $("btnLabel").textContent = "פתח את השער";
+    }, 25000);
+  }
+
+  // ------------------------------------------------------------- setup
+  function showSetup() {
+    $("urlInput").value = getUrl();
+    $("urlErr").textContent = "";
+    $("cancelSetup").hidden = !getUrl();
+    $("sheet").hidden = false;
+    setTimeout(() => $("urlInput").focus(), 100);
+  }
+  $("setup").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const v = $("urlInput").value.trim();
+    if (!/^https:\/\/\S+$/i.test(v)) { $("urlErr").textContent = "זה לא נראה כמו קישור. הוא צריך להתחיל ב־https://"; return; }
+    if (!setUrl(v)) { $("urlErr").textContent = "הדפדפן לא מאפשר לשמור. אם זה חלון פרטי, פתח בחלון רגיל."; return; }
+    $("sheet").hidden = true;
+    status("", "מוכן", "לחץ על הכפתור כדי לפתוח את השער");
+  });
+  $("cancelSetup").addEventListener("click", () => { $("sheet").hidden = true; });
+  $("gear").addEventListener("click", showSetup);
+  $("openBtn").addEventListener("click", openGate);
+
+  if (!getUrl()) showSetup();
+})();
+</script>
+</body>
+</html>
